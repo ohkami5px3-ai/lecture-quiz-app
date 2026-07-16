@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>講義クイズ</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f4f8;
+  color: #1e293b;
+  min-height: 100vh;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #2563eb;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+.badge {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+.screen { display: none; }
+.screen.active { display: block; }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+input[type="text"], textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+input[type="text"]:focus, textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+textarea { resize: vertical; min-height: 80px; }
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  text-align: center;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-success { background: #16a34a; color: #fff; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-secondary { background: #64748b; color: #fff; }
+.btn-secondary:hover { background: #475569; }
+.btn-block { display: block; width: 100%; }
+.btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.btn-group .btn { flex: 1; min-width: 140px; }
+.choice-btn {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+.choice-btn:hover { border-color: #2563eb; background: #eff6ff; }
+.choice-btn.selected { border-color: #2563eb; background: #dbeafe; }
+.choice-btn.correct { border-color: #16a34a; background: #dcfce7; }
+.choice-btn.incorrect { border-color: #dc2626; background: #fee2e2; }
+.choice-btn:disabled { cursor: default; opacity: 0.9; }
+.bar-chart { margin-top: 16px; }
+.bar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+.bar-label {
+  min-width: 120px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar-track {
+  flex: 1;
+  height: 32px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+.bar-fill.correct-bar { background: #16a34a; }
+.bar-count { min-width: 30px; text-align: right; font-weight: 600; }
+.comment-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.comment-item:last-child { border-bottom: none; }
+.comment-nickname {
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 0.85rem;
+}
+.comment-text { margin-top: 4px; }
+.comment-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 32px;
+  font-size: 0.95rem;
+}
+.choice-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.choice-input-row input { flex: 1; }
+.choice-input-row .radio-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.remove-choice {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1e293b;
+}
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.waiting-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+.waiting-message .icon { font-size: 2.5rem; margin-bottom: 12px; }
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .container { padding: 12px; }
+  .card { padding: 16px; }
+  .btn-group { flex-direction: column; }
+  .btn-group .btn { min-width: auto; }
+  .bar-label { min-width: 80px; font-size: 0.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>講義クイズ</h1>
+<p class="subtitle">リアルタイムクイズ＆感想共有</p>
+
+<!-- エントリー画面 -->
+<div id="screen-entry" class="screen active">
+<div class="card">
+  <label for="nickname-input">ニックネーム（任意）</label>
+  <input type="text" id="nickname-input" placeholder="ニックネームを入力（未入力なら匿名）" maxlength="20">
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="joinAs('host')">出題者として始める</button>
+    <button class="btn btn-success" onclick="joinAs('participant')">参加者として始める</button>
+  </div>
+</div>
+</div>
+
+<!-- 出題者画面 -->
+<div id="screen-host" class="screen">
+<div class="status-bar">
+  <span class="badge">出題者モード</span>
+  <span id="host-participant-count">参加者: 0人</span>
+</div>
+
+<!-- クイズ作成 -->
+<div class="card" id="quiz-create-section">
+  <div class="section-title">クイズ作成</div>
+  <label for="question-input">問題文</label>
+  <input type="text" id="question-input" placeholder="問題を入力してください" style="margin-bottom:16px;">
+  <label>選択肢（正解にチェック）</label>
+  <div id="choices-container"></div>
+  <button class="btn btn-secondary" onclick="addChoice()" style="margin-top:8px;padding:8px 16px;font-size:0.85rem;">＋ 選択肢を追加</button>
+  <div class="btn-group">
+    <button class="btn btn-primary btn-block" onclick="createQuiz()">出題する</button>
+  </div>
+</div>
+
+<!-- 出題中 -->
+<div class="card" id="quiz-active-section" style="display:none;">
+  <div class="section-title">出題中</div>
+  <p id="host-question-display" style="font-size:1.2rem;font-weight:600;margin-bottom:16px;"></p>
+  <div id="host-tally-chart" class="bar-chart"></div>
+  <div class="btn-group">
+    <button class="btn btn-success" onclick="revealResult()">結果発表</button>
+    <button class="btn btn-danger" onclick="resetQuiz()">リセット</button>
+  </div>
+</div>
+
+<!-- 結果表示（出題者） -->
+<div class="card" id="quiz-result-host-section" style="display:none;">
+  <div class="section-title">結果</div>
+  <p id="host-result-question" style="font-size:1.2rem;font-weight:600;margin-bottom:16px;"></p>
+  <div id="host-result-chart" class="bar-chart"></div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="resetQuiz()">次のクイズへ</button>
+  </div>
+</div>
+
+<!-- 感想一覧（出題者） -->
+<div class="card">
+  <div class="section-title">感想一覧</div>
+  <div id="host-comments-list">
+    <div class="empty-state">まだ感想はありません</div>
+  </div>
+</div>
+</div>
+
+<!-- 参加者画面 -->
+<div id="screen-participant" class="screen">
+<div class="status-bar">
+  <span class="badge">参加者モード</span>
+  <span id="participant-nickname-display"></span>
+</div>
+
+<!-- クイズ待機中 -->
+<div class="card" id="quiz-waiting-section">
+  <div class="waiting-message">
+    <div class="icon">&#128218;</div>
+    <p>クイズの出題を待っています...</p>
+  </div>
+</div>
+
+<!-- クイズ回答 -->
+<div class="card" id="quiz-answer-section" style="display:none;">
+  <div class="section-title">クイズ</div>
+  <p id="participant-question-display" style="font-size:1.2rem;font-weight:600;margin-bottom:16px;"></p>
+  <div id="participant-choices"></div>
+  <p id="answer-status" style="text-align:center;color:#16a34a;font-weight:600;display:none;">回答済み</p>
+</div>
+
+<!-- 結果表示（参加者） -->
+<div class="card" id="quiz-result-participant-section" style="display:none;">
+  <div class="section-title">結果発表</div>
+  <p id="participant-result-question" style="font-size:1.2rem;font-weight:600;margin-bottom:16px;"></p>
+  <div id="participant-result-chart" class="bar-chart"></div>
+</div>
+
+<!-- 感想投稿 -->
+<div class="card">
+  <div class="section-title">感想を共有</div>
+  <textarea id="comment-input" placeholder="感想やコメントを入力..." rows="3"></textarea>
+  <button class="btn btn-primary btn-block" onclick="postComment()" style="margin-top:12px;">投稿する</button>
+</div>
+
+<!-- 感想一覧（参加者） -->
+<div class="card">
+  <div class="section-title">みんなの感想</div>
+  <div id="participant-comments-list">
+    <div class="empty-state">まだ感想はありません</div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// アプリ状態
+const app = {
+  socket: null,
+  nickname: '',
+  mode: '',
+  myAnswer: null,
+  quizChoices: []
+};
+
+// 初期化
+function init() {
+  try {
+    if (typeof io !== 'undefined') {
+      app.socket = io();
+      setupSocketListeners();
+    } else {
+      console.error('Socket.IO が読み込まれていません。サーバーが起動しているか確認してください。');
+      alert('サーバーに接続できません。npm start でサーバーを起動してからアクセスしてください。');
+    }
+  } catch (e) {
+    console.error('Socket.IO 接続エラー:', e);
+    alert('サーバーに接続できません。npm start でサーバーを起動してからアクセスしてください。');
+  }
+  initChoices();
+}
+
+// DOMが準備完了してから初期化
+document.addEventListener('DOMContentLoaded', init);
+
+// 選択肢の初期表示（3択）
+function initChoices() {
+  const container = document.getElementById('choices-container');
+  container.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    addChoiceRow(i);
+  }
+}
+
+function addChoiceRow(index) {
+  const container = document.getElementById('choices-container');
+  const row = document.createElement('div');
+  row.className = 'choice-input-row';
+  row.innerHTML = `
+    <input type="text" placeholder="選択肢${index + 1}" class="choice-field">
+    <label class="radio-label">
+      <input type="radio" name="correct" value="${index}"> 正解
+    </label>
+    <button class="remove-choice" onclick="removeChoice(this)" title="削除">&times;</button>
+  `;
+  container.appendChild(row);
+  updateRadioValues();
+}
+
+function addChoice() {
+  const container = document.getElementById('choices-container');
+  const count = container.children.length;
+  if (count >= 4) {
+    alert('選択肢は最大4つまでです');
+    return;
+  }
+  addChoiceRow(count);
+}
+
+function removeChoice(btn) {
+  const container = document.getElementById('choices-container');
+  if (container.children.length <= 2) {
+    alert('選択肢は最低2つ必要です');
+    return;
+  }
+  btn.closest('.choice-input-row').remove();
+  updateRadioValues();
+}
+
+function updateRadioValues() {
+  const rows = document.querySelectorAll('#choices-container .choice-input-row');
+  rows.forEach((row, i) => {
+    const radio = row.querySelector('input[type="radio"]');
+    radio.value = i;
+    row.querySelector('.choice-field').placeholder = `選択肢${i + 1}`;
+  });
+}
+
+// 入室
+function joinAs(mode) {
+  if (!app.socket || !app.socket.connected) {
+    alert('サーバーに接続されていません。ページを再読み込みしてください。');
+    return;
+  }
+
+  const nicknameInput = document.getElementById('nickname-input');
+  app.nickname = nicknameInput.value.trim() || '匿名ユーザー';
+  app.mode = mode;
+
+  app.socket.emit('join', { nickname: app.nickname, mode });
+
+  // 画面切替
+  document.getElementById('screen-entry').classList.remove('active');
+  document.getElementById('screen-host').classList.remove('active');
+  document.getElementById('screen-participant').classList.remove('active');
+
+  if (mode === 'host') {
+    document.getElementById('screen-host').classList.add('active');
+  } else {
+    document.getElementById('screen-participant').classList.add('active');
+    document.getElementById('participant-nickname-display').textContent = app.nickname;
+  }
+}
+
+// クイズ出題
+function createQuiz() {
+  const question = document.getElementById('question-input').value.trim();
+  if (!question) { alert('問題文を入力してください'); return; }
+
+  const fields = document.querySelectorAll('#choices-container .choice-field');
+  const choices = [];
+  fields.forEach(f => choices.push(f.value.trim()));
+
+  if (choices.some(c => !c)) { alert('すべての選択肢を入力してください'); return; }
+
+  const correctRadio = document.querySelector('input[name="correct"]:checked');
+  if (!correctRadio) { alert('正解を選択してください'); return; }
+  const correctIndex = parseInt(correctRadio.value);
+
+  app.quizChoices = choices;
+  app.socket.emit('quiz:create', { question, choices, correctIndex });
+
+  // UI切替
+  document.getElementById('quiz-create-section').style.display = 'none';
+  document.getElementById('quiz-active-section').style.display = 'block';
+  document.getElementById('quiz-result-host-section').style.display = 'none';
+  document.getElementById('host-question-display').textContent = question;
+  renderTallyChart('host-tally-chart', choices, new Array(choices.length).fill(0), -1);
+}
+
+// 結果発表
+function revealResult() {
+  app.socket.emit('quiz:reveal');
+}
+
+// リセット
+function resetQuiz() {
+  app.socket.emit('quiz:reset');
+  document.getElementById('quiz-create-section').style.display = 'block';
+  document.getElementById('quiz-active-section').style.display = 'none';
+  document.getElementById('quiz-result-host-section').style.display = 'none';
+  document.getElementById('question-input').value = '';
+  initChoices();
+}
+
+// 参加者の回答
+function answerQuiz(choiceIndex) {
+  if (app.myAnswer !== null) return;
+  app.myAnswer = choiceIndex;
+  app.socket.emit('quiz:answer', { choiceIndex });
+
+  // ボタン状態更新
+  const buttons = document.querySelectorAll('#participant-choices .choice-btn');
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === choiceIndex) btn.classList.add('selected');
+  });
+  document.getElementById('answer-status').style.display = 'block';
+}
+
+// 感想投稿
+function postComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  app.socket.emit('comment:post', { text });
+  input.value = '';
+}
+
+// Socket.IO イベントリスナー
+function setupSocketListeners() {
+  const socket = app.socket;
+
+  // 参加者数更新
+  socket.on('participants:update', ({ count }) => {
+    const el = document.getElementById('host-participant-count');
+    if (el) el.textContent = `参加者: ${count}人`;
+  });
+
+  // クイズ開始（参加者向け）
+  socket.on('quiz:start', ({ question, choices }) => {
+    if (app.mode !== 'participant') return;
+    app.myAnswer = null;
+    app.quizChoices = choices;
+
+    document.getElementById('quiz-waiting-section').style.display = 'none';
+    document.getElementById('quiz-answer-section').style.display = 'block';
+    document.getElementById('quiz-result-participant-section').style.display = 'none';
+    document.getElementById('participant-question-display').textContent = question;
+    document.getElementById('answer-status').style.display = 'none';
+
+    const container = document.getElementById('participant-choices');
+    container.innerHTML = '';
+    choices.forEach((choice, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = choice;
+      btn.onclick = () => answerQuiz(i);
+      container.appendChild(btn);
+    });
+  });
+
+  // 集計更新（出題者向け）
+  socket.on('quiz:tally', ({ tally }) => {
+    if (app.mode !== 'host') return;
+    renderTallyChart('host-tally-chart', app.quizChoices, tally, -1);
+  });
+
+  // 結果発表
+  socket.on('quiz:result', ({ question, choices, correctIndex, tally }) => {
+    app.quizChoices = choices;
+
+    if (app.mode === 'host') {
+      document.getElementById('quiz-active-section').style.display = 'none';
+      document.getElementById('quiz-result-host-section').style.display = 'block';
+      document.getElementById('host-result-question').textContent = question;
+      renderTallyChart('host-result-chart', choices, tally, correctIndex);
+    } else {
+      document.getElementById('quiz-answer-section').style.display = 'none';
+      document.getElementById('quiz-result-participant-section').style.display = 'block';
+      document.getElementById('participant-result-question').textContent = question;
+      renderTallyChart('participant-result-chart', choices, tally, correctIndex);
+
+      // 自分の回答のフィードバック
+      if (app.myAnswer !== null) {
+        const buttons = document.querySelectorAll('#participant-choices .choice-btn');
+        buttons.forEach((btn, i) => {
+          if (i === correctIndex) btn.classList.add('correct');
+          else if (i === app.myAnswer && i !== correctIndex) btn.classList.add('incorrect');
+        });
+      }
+    }
+  });
+
+  // クイズリセット
+  socket.on('quiz:cleared', () => {
+    if (app.mode !== 'participant') return;
+    app.myAnswer = null;
+    document.getElementById('quiz-waiting-section').style.display = 'block';
+    document.getElementById('quiz-answer-section').style.display = 'none';
+    document.getElementById('quiz-result-participant-section').style.display = 'none';
+  });
+
+  // 新規感想
+  socket.on('comment:new', (comment) => {
+    appendComment('host-comments-list', comment);
+    appendComment('participant-comments-list', comment);
+  });
+
+  // 感想一覧（入室時）
+  socket.on('comment:list', (comments) => {
+    comments.forEach(c => {
+      appendComment('host-comments-list', c);
+      appendComment('participant-comments-list', c);
+    });
+  });
+}
+
+// 棒グラフ描画
+function renderTallyChart(containerId, choices, tally, correctIndex) {
+  const container = document.getElementById(containerId);
+  const max = Math.max(...tally, 1);
+  let html = '';
+  choices.forEach((choice, i) => {
+    const pct = (tally[i] / max) * 100;
+    const isCorrect = i === correctIndex;
+    html += `
+      <div class="bar-row">
+        <span class="bar-label">${isCorrect ? '&#9989; ' : ''}${choice}</span>
+        <div class="bar-track">
+          <div class="bar-fill ${isCorrect ? 'correct-bar' : ''}" style="width:${pct}%">${tally[i] > 0 ? tally[i] : ''}</div>
+        </div>
+        <span class="bar-count">${tally[i]}</span>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+// 感想追加
+function appendComment(listId, comment) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  // 空メッセージを消す
+  const empty = list.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  const time = new Date(comment.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  const item = document.createElement('div');
+  item.className = 'comment-item';
+  item.innerHTML = `
+    <div class="comment-nickname">${escapeHtml(comment.nickname)}</div>
+    <div class="comment-text">${escapeHtml(comment.text)}</div>
+    <div class="comment-time">${time}</div>
+  `;
+  list.appendChild(item);
+  list.scrollTop = list.scrollHeight;
+}
+
+// XSS対策
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// escapeHtml は上で定義済み
+
+</script>
+</body>
+</html>
