@@ -51,6 +51,23 @@ npm start
 http://192.168.x.x:3000
 ```
 
+## インターネット公開（Render）
+
+このアプリはNode.jsサーバーが必要なため、GitHub Pagesでは動作しません。
+Render などのNode.js対応ホスティングにデプロイしてください。
+
+1. https://render.com にGitHubアカウントでログイン
+2. 「New +」→「Web Service」を選択
+3. このリポジトリを選択
+4. 設定（`render.yaml` があれば自動認識）:
+   - Runtime: Node
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+5. 「Create Web Service」でデプロイ開始
+6. 完了後、`https://<アプリ名>.onrender.com` で公開
+
+※ 無料プランは一定時間アクセスがないとスリープします。次回アクセス時に起動まで数十秒かかります。
+
 ## 技術構成
 
 - サーバー: Node.js + Express + Socket.IO
